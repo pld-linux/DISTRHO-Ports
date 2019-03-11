@@ -1,0 +1,82 @@
+diff -dur DISTRHO-Ports-2018-04-16.orig/scripts/make-project.lua DISTRHO-Ports-2018-04-16/scripts/make-project.lua
+--- DISTRHO-Ports-2018-04-16.orig/scripts/make-project.lua	2018-04-04 18:45:01.000000000 +0200
++++ DISTRHO-Ports-2018-04-16/scripts/make-project.lua	2019-03-11 20:48:26.904577892 +0100
+@@ -23,14 +23,6 @@
+   package.config["Release"].target       = project.name
+   package.config["Release"].objdir       = "intermediate/Release"
+   package.config["Release"].defines      = { "NDEBUG=1" }
+-  package.config["Release"].buildoptions = { "-O3", "-fvisibility=hidden", "-fvisibility-inlines-hidden" }
+-
+-  if (not (os.getenv("NOOPTIMIZATIONS") or os.getenv("LINUX_EMBED"))) then
+-    package.config["Release"].buildoptions = {
+-        package.config["Release"].buildoptions,
+-        "-mtune=generic", "-msse", "-msse2"
+-    }
+-  end
+ 
+   if (not macosx) then
+     package.config["Release"].buildoptions = { package.config["Release"].buildoptions, "-fdata-sections", "-ffunction-sections" }
+@@ -155,9 +147,6 @@
+ function make_juce_lv2_project(name)
+   package = make_plugin_project(name, "LV2")
+ 
+-  package.config["Release"].links = { "juce" }
+-  package.config["Debug"].links   = { "juce_debug" }
+-
+   if (windows) then
+     package.links       = { "comdlg32", "gdi32", "imm32", "ole32", "oleaut32", "shlwapi", "uuid", "version", "winmm", "wininet", "ws2_32" }
+   elseif (macosx) then
+@@ -167,14 +156,7 @@
+   elseif (os.getenv("LINUX_EMBED")) then
+     package.links       = { "dl", "rt" }
+   else
+-    package.links       = { "dl", "rt" }
+-    package.linkoptions = { package.linkoptions, "`pkg-config --libs freetype2 x11 xext`" }
+-
+-    if (name == "drumsynth" or name == "eqinox" or name == "Dexed") then
+-      package.linkoptions = { package.linkoptions, "`pkg-config --libs alsa`" }
+-    else
+-      package.config["Debug"].linkoptions = { "`pkg-config --libs alsa`" }
+-    end
++    package.links       = { "juce", "freetype", "Xext", "X11", "asound", "dl", "rt" }
+   end
+ 
+   return package
+@@ -183,9 +165,6 @@
+ function make_juce_vst_project(name)
+   package = make_plugin_project(name, "VST")
+ 
+-  package.config["Release"].links = { "juce" }
+-  package.config["Debug"].links   = { "juce_debug" }
+-
+   package.buildoptions = {
+     package.buildoptions,
+     "-Wno-multichar",
+@@ -204,14 +183,7 @@
+                             "-framework Accelerate", "-framework AudioToolbox", "-framework AudioUnit", "-framework Carbon", "-framework Cocoa",
+                             "-framework CoreAudio", "-framework CoreAudioKit", "-framework CoreMIDI", "-framework IOKit", "-framework QuartzCore", "-framework WebKit" }
+   else
+-    package.links       = { "dl", "rt" }
+-    package.linkoptions = { package.linkoptions, "`pkg-config --libs freetype2 x11 xext`" }
+-
+-    if (name == "drumsynth" or name == "eqinox" or name == "Dexed") then
+-      package.linkoptions = { package.linkoptions, "`pkg-config --libs alsa`" }
+-    else
+-      package.config["Debug"].linkoptions = { "`pkg-config --libs alsa`" }
+-    end
++    package.links       = {"juce", "freetype", "Xext", "X11", "asound", "dl", "rt" }
+   end
+ 
+   return package
+diff -dur DISTRHO-Ports-2018-04-16.orig/scripts/premake-update.sh DISTRHO-Ports-2018-04-16/scripts/premake-update.sh
+--- DISTRHO-Ports-2018-04-16.orig/scripts/premake-update.sh	2018-04-04 18:45:01.000000000 +0200
++++ DISTRHO-Ports-2018-04-16/scripts/premake-update.sh	2019-03-11 20:45:05.191471317 +0100
+@@ -28,7 +28,7 @@
+ 
+ run_premake()
+ {
+-  premake --os $1 --target gnu --cc gcc
++  premake --verbose --os $1 --target gnu --cc gcc
+ 
+   if [ $MAC == 1 ]; then
+     sed -i -e "s|BLDCMD = ar -rcs \$(OUTDIR)/\$(TARGET) \$(OBJECTS) \$(TARGET_ARCH)|BLDCMD = ar -rcs \$(OUTDIR)/\$(TARGET) \$(OBJECTS)|" `find . -name \*.make`
