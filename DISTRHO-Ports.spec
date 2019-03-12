@@ -17,6 +17,7 @@ BuildRequires:	pkgconfig
 BuildRequires:	premake3
 BuildRequires:	xorg-lib-libX11-devel
 BuildRequires:	xorg-lib-libXext-devel
+ExclusiveArch:	%{x8664}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %define		_noautoprovfiles	%{_libdir}/(lv2|vst)
